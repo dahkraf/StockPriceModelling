@@ -2,8 +2,6 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="3062fbd8-2c50-4f3b-8333-ea65e09fad77" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/other.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
@@ -87,6 +85,7 @@
       <updated>1612112446869</updated>
       <workItem from="1612112477675" duration="746000" />
       <workItem from="1612158547599" duration="3475000" />
+      <workItem from="1612164366041" duration="2763000" />
     </task>
     <servers />
   </component>
@@ -98,24 +97,24 @@
       <screen x="0" y="0" width="1536" height="824" />
     </state>
     <state x="549" y="168" key="FileChooserDialogImpl/0.0.1536.824@0.0.1536.824" timestamp="1612112564106" />
-    <state width="723" height="210" key="GridCell.Tab.0.bottom" timestamp="1612162027765">
+    <state width="723" height="205" key="GridCell.Tab.0.bottom" timestamp="1612168208842">
       <screen x="0" y="0" width="1536" height="824" />
     </state>
-    <state width="723" height="210" key="GridCell.Tab.0.bottom/0.0.1536.824@0.0.1536.824" timestamp="1612162027765" />
-    <state width="723" height="210" key="GridCell.Tab.0.center" timestamp="1612162027765">
+    <state width="723" height="205" key="GridCell.Tab.0.bottom/0.0.1536.824@0.0.1536.824" timestamp="1612168208842" />
+    <state width="723" height="205" key="GridCell.Tab.0.center" timestamp="1612168208842">
       <screen x="0" y="0" width="1536" height="824" />
     </state>
-    <state width="723" height="210" key="GridCell.Tab.0.center/0.0.1536.824@0.0.1536.824" timestamp="1612162027765" />
-    <state width="723" height="210" key="GridCell.Tab.0.left" timestamp="1612162027765">
+    <state width="723" height="205" key="GridCell.Tab.0.center/0.0.1536.824@0.0.1536.824" timestamp="1612168208842" />
+    <state width="723" height="205" key="GridCell.Tab.0.left" timestamp="1612168208842">
       <screen x="0" y="0" width="1536" height="824" />
     </state>
-    <state width="723" height="210" key="GridCell.Tab.0.left/0.0.1536.824@0.0.1536.824" timestamp="1612162027765" />
-    <state width="723" height="210" key="GridCell.Tab.0.right" timestamp="1612162027765">
+    <state width="723" height="205" key="GridCell.Tab.0.left/0.0.1536.824@0.0.1536.824" timestamp="1612168208842" />
+    <state width="723" height="205" key="GridCell.Tab.0.right" timestamp="1612168208842">
       <screen x="0" y="0" width="1536" height="824" />
     </state>
-    <state width="723" height="210" key="GridCell.Tab.0.right/0.0.1536.824@0.0.1536.824" timestamp="1612162027765" />
+    <state width="723" height="205" key="GridCell.Tab.0.right/0.0.1536.824@0.0.1536.824" timestamp="1612168208842" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/StockPriceModelling$main.coverage" NAME="main Coverage Results" MODIFIED="1612162010069" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/StockPriceModelling$main.coverage" NAME="main Coverage Results" MODIFIED="1612168173020" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>
