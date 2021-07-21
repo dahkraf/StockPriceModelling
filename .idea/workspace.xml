@@ -3,6 +3,7 @@
   <component name="ChangeListManager">
     <list default="true" id="3062fbd8-2c50-4f3b-8333-ea65e09fad77" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Plots/p_0_alpha_1.jpg" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -101,7 +102,7 @@
       <workItem from="1626768657804" duration="757000" />
       <workItem from="1626789998912" duration="296000" />
       <workItem from="1626790406549" duration="4560000" />
-      <workItem from="1626854516808" duration="11689000" />
+      <workItem from="1626854516808" duration="23907000" />
     </task>
     <servers />
   </component>
@@ -109,28 +110,32 @@
     <option name="version" value="1" />
   </component>
   <component name="WindowStateProjectService">
+    <state x="529" y="215" key="#com.intellij.fileTypes.FileTypeChooser" timestamp="1626879983360">
+      <screen x="0" y="0" width="1536" height="824" />
+    </state>
+    <state x="529" y="215" key="#com.intellij.fileTypes.FileTypeChooser/0.0.1536.824@0.0.1536.824" timestamp="1626879983360" />
     <state x="449" y="149" key="#com.intellij.openapi.updateSettings.impl.PluginUpdateInfoDialog" timestamp="1626790281535">
       <screen x="0" y="0" width="1536" height="824" />
     </state>
     <state x="449" y="149" key="#com.intellij.openapi.updateSettings.impl.PluginUpdateInfoDialog/0.0.1536.824@0.0.1536.824" timestamp="1626790281535" />
-    <state width="1493" height="141" key="GridCell.Tab.0.bottom" timestamp="1626866804936">
+    <state width="1493" height="188" key="GridCell.Tab.0.bottom" timestamp="1626887200320">
       <screen x="0" y="0" width="1536" height="824" />
     </state>
-    <state width="1493" height="141" key="GridCell.Tab.0.bottom/0.0.1536.824@0.0.1536.824" timestamp="1626866804936" />
-    <state width="1493" height="141" key="GridCell.Tab.0.center" timestamp="1626866804936">
+    <state width="1493" height="188" key="GridCell.Tab.0.bottom/0.0.1536.824@0.0.1536.824" timestamp="1626887200320" />
+    <state width="1493" height="188" key="GridCell.Tab.0.center" timestamp="1626887200320">
       <screen x="0" y="0" width="1536" height="824" />
     </state>
-    <state width="1493" height="141" key="GridCell.Tab.0.center/0.0.1536.824@0.0.1536.824" timestamp="1626866804936" />
-    <state width="1493" height="141" key="GridCell.Tab.0.left" timestamp="1626866804936">
+    <state width="1493" height="188" key="GridCell.Tab.0.center/0.0.1536.824@0.0.1536.824" timestamp="1626887200320" />
+    <state width="1493" height="188" key="GridCell.Tab.0.left" timestamp="1626887200320">
       <screen x="0" y="0" width="1536" height="824" />
     </state>
-    <state width="1493" height="141" key="GridCell.Tab.0.left/0.0.1536.824@0.0.1536.824" timestamp="1626866804936" />
-    <state width="1493" height="141" key="GridCell.Tab.0.right" timestamp="1626866804936">
+    <state width="1493" height="188" key="GridCell.Tab.0.left/0.0.1536.824@0.0.1536.824" timestamp="1626887200320" />
+    <state width="1493" height="188" key="GridCell.Tab.0.right" timestamp="1626887200320">
       <screen x="0" y="0" width="1536" height="824" />
     </state>
-    <state width="1493" height="141" key="GridCell.Tab.0.right/0.0.1536.824@0.0.1536.824" timestamp="1626866804936" />
+    <state width="1493" height="188" key="GridCell.Tab.0.right/0.0.1536.824@0.0.1536.824" timestamp="1626887200320" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/StockPriceModelling$main.coverage" NAME="main Coverage Results" MODIFIED="1626866804928" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/StockPriceModelling$main.coverage" NAME="main Coverage Results" MODIFIED="1626887200312" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>
