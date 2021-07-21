@@ -45,10 +45,8 @@ def Milstein_scheme(xi_0, sigma_0, S_0, coeff, alfa, p, Wiener1, Wiener2, delta_
         S_array[i] = S_array[i-1] + coeff * S_array[i-1] * delta_t + sigma_array[i-1] * S_array[i-1] * (Wiener1[i] - Wiener1[i-1]) + 0.5 * sigma_array[i-1]**2 * S_array[i-1] * ((Wiener1[i] - Wiener1[i-1])**2 - delta_t)
 
     return xi_array, sigma_array, S_array
-def Black_Scholes_exact(sigma_0, coeff, S_0, Wiener1, timestamps, N):
-    solution = np.zeros(N)
-    for i, t in enumerate(timestamps):
-        solution[i] = S_0 * np.exp((coeff - 0.5 * sigma_0**2) * t + Wiener1[i] * sigma_0)
+def Black_Scholes_exact(sigma_0, coeff, S_0, Wiener1, dt, N):
+    solution = S_0 * np.exp((coeff - 0.5 * sigma_0**2) * (N - 1) * dt + Wiener1[N - 1] * sigma_0)
     return solution
 
 # Plotting
@@ -65,10 +63,11 @@ def plot_schemes(Euler_array, Milstein_array, alfa, p):
 # Convergence Testing
 def strong_convergence(sample_sizes, sim_size):
     # Finest grid
-    N = 2 * max(sample_sizes)
+    N = int(2 * max(sample_sizes))
 
     errors = []
     for n in sample_sizes:
+        print(n)
         error_dt = strong_error(sim_size, n, N)
         errors.append((n, error_dt))
     return errors
@@ -76,8 +75,10 @@ def strong_error(sim_size, N, N_benchmark):
     Euler_error = 0.0
     Milstein_error = 0.0
     for i in range(sim_size):
+        print(i)
         seeds = [i, i+1]
-        benchmark_solution_EoI = numerical_solution(N_benchmark, seeds, scheme_name="Milstein")[N_benchmark - 1]
+        #benchmark_solution_EoI = numerical_solution(N_benchmark, seeds, scheme_name="Euler")[N_benchmark - 1]
+        benchmark_solution_EoI = numerical_solution(N_benchmark, seeds, scheme_name="BS")
         Num_solution_Euler = numerical_solution(N, seeds, "Euler")
         Num_solution_Milstein = numerical_solution(N, seeds, "Milstein")
         Euler_EoI = Num_solution_Euler[N - 1]
@@ -86,13 +87,13 @@ def strong_error(sim_size, N, N_benchmark):
         single_error_Milstein = abs(benchmark_solution_EoI - Milstein_EoI)
         Euler_error += single_error_Euler
         Milstein_error += single_error_Milstein
-    Euler_error = Euler_error / sim_size
-    Milstein_error = Milstein_error / sim_size
+    Euler_error = Euler_error / (sim_size * 1.0)
+    Milstein_error = Milstein_error / (sim_size * 1.0)
     return Euler_error, Milstein_error
 
 def weak_convergence(sample_sizes, sim_size):
     # Finest grid
-    N = 2 * max(sample_sizes)
+    N = 10**3 * max(sample_sizes)
 
     errors = []
     for n in sample_sizes:
@@ -142,34 +143,43 @@ def numerical_solution(N, seeds, scheme_name):
 
     if (scheme_name == "Milstein"):
         return Milstein_scheme(xi_0, sigma_0, S_0, coeff, alfa, p, Wiener1, Wiener2, delta_t, N)[2]
+    elif (scheme_name == "BS"):
+        return Black_Scholes_exact(sigma_0, coeff, S_0, Wiener1, delta_t, N)
     return Euler_scheme(xi_0, sigma_0, S_0, coeff, alfa, p, Wiener1, Wiener2, delta_t, N)[2]
 
 def plot_errors(variable, SE, WE, SM, WM):
-    plt.plot(variable, SE, label="Euler Strong Error", color="#AC3015")
-    plt.plot(variable, WE, label="Euler Weak Error", color="#AC3015", ls='--')
-    plt.plot(variable, SM, label="Milstein Strong Error", color="#1E97DE")
-    plt.plot(variable, WM, label="Milstein Weak Error", color="#1E97DE", ls='--')
-    plt.xlabel('$N$');
-    plt.ylabel('Error$_N$');
-    plt.legend()
+    fig, ax = plt.subplots()
+    ax.plot(variable, SE, label="Euler Strong Error", color="#AC3015")
+    #ax.plot(variable, WE, label="Euler Weak Error", color="#AC3015", ls='--')
+    ax.plot(variable, SM, label="Milstein Strong Error", color="#1E97DE")
+    #ax.plot(variable, WM, label="Milstein Weak Error", color="#1E97DE", ls='--')
+    ax.set_xlabel('$\Delta t$')
+    ax.set_ylabel('Error$_N$')
+    ax.legend()
     plt.show()
 
-sample_sizes = [5, 10, 20, 50, 100, 250, 500]
-sim_size = 20
+
+dt_grid = [2 ** (R-10) for R in range(2)]
+print(dt_grid)
+minval = 2 ** (-20)
+dt_grid.insert(0, minval)
+print(dt_grid)
+sample_sizes = [int(1.0 / dt) for dt in dt_grid]
+sim_size = 10
 Strong_errors = list(zip(*list(zip(*strong_convergence(sample_sizes, sim_size)))[1]))
-Weak_errors = list(zip(*list(zip(*weak_convergence(sample_sizes, sim_size)))[1]))
+#Weak_errors = list(zip(*list(zip(*weak_convergence(sample_sizes, sim_size)))[1]))
 Strong_Euler_errors = Strong_errors[0]
 Strong_Milstein_errors = Strong_errors[1]
-Weak_Euler_errors = Weak_errors[0]
-Weak_Milstein_errors = Weak_errors[1]
+#Weak_Euler_errors = Weak_errors[0]
+#Weak_Milstein_errors = Weak_errors[1]
 
 # Plotting
-plot_errors(sample_sizes, Strong_Euler_errors, Weak_Euler_errors, Strong_Milstein_errors, Weak_Milstein_errors)
+plot_errors(dt_grid, Strong_Euler_errors, [], Strong_Milstein_errors, [])
 sys.exit() ###############################################################################
 
 # Space Parameters
 T_end = 1.0
-N = 50
+N = 365
 delta_t = T_end/N
 
 # General Equation Parameters
@@ -198,14 +208,17 @@ Wiener2 = Wiener_process(N, increments2)
 
 # Exact solution (Black-Scholes)
 # B_S = Black_Scholes_exact(sigma_0, coeff, S_0, Wiener1, timestamps, N)
+# _, _, M_S = Milstein_scheme(xi_0, sigma_0, S_0, coeff, 1, 0, Wiener1, Wiener2, delta_t, N)
+#
+# plot_schemes(B_S, M_S, 1, 0)
 
-# Cartesian product of the two lists
-parameter_combinations = itertools.product(alfa_array, p_array)
-
-for pair in parameter_combinations:
-    # Numerical solutions
-    alfa = pair[0]
-    p = pair[1]
-    _, _, S_array_E = Euler_scheme(xi_0, sigma_0, S_0, coeff, alfa, p, Wiener1, Wiener2, delta_t, N)
-    _, _, S_array_M = Milstein_scheme(xi_0, sigma_0, S_0, coeff, alfa, p, Wiener1, Wiener2, delta_t, N)
-    plot_schemes(S_array_E, S_array_M, alfa, p)
+# # Cartesian product of the two lists
+# parameter_combinations = itertools.product(alfa_array, p_array)
+#
+# for pair in parameter_combinations:
+#     # Numerical solutions
+#     alfa = pair[0]
+#     p = pair[1]
+#     _, _, S_array_E = Euler_scheme(xi_0, sigma_0, S_0, coeff, alfa, p, Wiener1, Wiener2, delta_t, N)
+#     _, _, S_array_M = Milstein_scheme(xi_0, sigma_0, S_0, coeff, alfa, p, Wiener1, Wiener2, delta_t, N)
+#     plot_schemes(S_array_E, S_array_M, alfa, p)
