@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import itertools
 from matplotlib.font_manager import FontProperties
+from matplotlib.colors import hsv_to_rgb
 import sys
 
 plt.rcParams['figure.figsize'] = (9,6)
@@ -115,33 +116,46 @@ def plot_volatility(Stock, Volatility, alfa, p):
     plt.legend(loc=2)
     plt.savefig("Volatility/Vol_p_{p}_alpha_{alpha}.jpg".format(p=p, alpha=alfa))
     plt.close()
-def plot_p_value_analysis(timestamps, outputs, p_array, output_variable="S_t"):
+def plot_parameter_analysis(timestamps, outputs, parameters, output_variable="S_t", var_of_interest="p"):
     fontP = FontProperties()
     fontP.set_size('x-small')
 
     fig, ax = plt.subplots()
-    fig.set_figheight(10)
-    fig.set_figwidth(15)
+
+    # Graph settings
+    fig.set_figheight(7)
+    fig.set_figwidth(12)
+    time_start, time_end = timestamps[0], timestamps[len(timestamps) - 1]
+    x_step = (time_end - time_start)/10.0
+    ax.xaxis.set_ticks(np.arange(time_start, time_end, x_step))
+    ax.set_xlim((time_start, time_end))
+
     output_variable_latex_name = output_variable
     if (output_variable == "xi"):
         output_variable_latex_name = "$\\" + output_variable_latex_name + "$"
-        for i, p in enumerate(p_array):
-            ax.plot(timestamps, outputs[i], label=r"$p =$ {p}".format(p=p), color=pal[i])
+        for i, param in enumerate(parameters):
+            p = param[0]
+            alfa = param[1]
+            ax.plot(timestamps, outputs[i], label="$p =$ {p} $\\alpha =$ {alfa}".format(p=p, alfa=alfa), color=pal[i], marker="o", markevery=x_step)
     elif (output_variable == "sigma"):
         output_variable_latex_name = "$\\" + output_variable_latex_name + "$"
-        for i, p in enumerate(p_array):
-            ax.plot(timestamps, outputs[i], label=r"$p =$ {p}".format(p=p), color=pal[i])
+        for i, param in enumerate(parameters):
+            p = param[0]
+            alfa = param[1]
+            ax.plot(timestamps, outputs[i], label="$p =$ {p} $\\alpha =$ {alfa}".format(p=p, alfa=alfa), color=pal[i], marker="o", markevery=x_step)
     else:
-        output_variable="S_t"
+        output_variable = "S_t"
         output_variable_latex_name = output_variable
         output_variable_latex_name = "$" + output_variable_latex_name + "$"
-        for i, p in enumerate(p_array):
-            ax.plot(timestamps, outputs[i], label=r"$p =$ {p}".format(p=p), color=pal[i])
+        for i, param in enumerate(parameters):
+            p = param[0]
+            alfa = param[1]
+            ax.plot(timestamps, outputs[i], label="$p =$ {p} $\\alpha =$ {alfa}".format(p=p, alfa=alfa), color=pal[i], marker="o", markevery=x_step)
 
     ax.set_xlabel("$t$")
     ax.set_ylabel(output_variable_latex_name)
     plt.legend(bbox_to_anchor=(1, 1), loc='upper left', prop=fontP)
-    plt.savefig("P Value Analysis/P_Values_{output_variable}.svg".format(output_variable=output_variable))
+    plt.savefig("Parameter Analysis/Param_Analysis_{output_variable}.svg".format(output_variable=output_variable), bbox_inches='tight')
     fig.clf()
     plt.close()
 
@@ -156,7 +170,7 @@ def plot_stock_expectation(p_array, Avg_stocks):
     plt.close()
 
 # Parameter Analysis
-def p_value_analysis(N, delta_t, seeds, xi_0, sigma_0, S_0, coeff, alfa, p_array, variable_of_interest="S_t"):
+def parameter_analysis(N, delta_t, seeds, xi_0, sigma_0, S_0, coeff, parameters, output_type="S_t", var_of_interest="p"):
     Xis = []
     Sigmas = []
     Stocks = []
@@ -165,8 +179,11 @@ def p_value_analysis(N, delta_t, seeds, xi_0, sigma_0, S_0, coeff, alfa, p_array
     # Wiener1, Wiener2 = pair_of_Wieners(N, delta_t, seeds)
     Wiener1, Wiener2 = pair_of_quick_Wieners(N, delta_t, seeds)
 
-    # Solve for different values fo p
-    for p in p_array:
+    # Solve for different pairs of parameters
+    for param in parameters:
+        p = param[0]
+        alfa = param[1]
+
         xi_array_M, sigma_array_M, S_array_M = Milstein_scheme(xi_0, sigma_0, S_0, coeff, alfa, p, Wiener1, Wiener2, delta_t, N)
 
         Xis.append(xi_array_M)
@@ -175,13 +192,13 @@ def p_value_analysis(N, delta_t, seeds, xi_0, sigma_0, S_0, coeff, alfa, p_array
 
     # Plot the graph
     timestamps = np.linspace(0.0, T_end, N)
-    if(variable_of_interest == "xi"):
-        plot_p_value_analysis(timestamps, Xis, p_array, variable_of_interest)
-    elif (variable_of_interest == "sigma"):
-        plot_p_value_analysis(timestamps, Sigmas, p_array, variable_of_interest)
+    if(output_type == "xi"):
+        plot_parameter_analysis(timestamps, Xis, parameters, output_type)
+    elif (output_type == "sigma"):
+        plot_parameter_analysis(timestamps, Sigmas, parameters, output_type)
     else:
-        variable_of_interest="S_t"
-        plot_p_value_analysis(timestamps, Stocks, p_array, variable_of_interest)
+        output_type = "S_t"
+        plot_parameter_analysis(timestamps, Stocks, parameters, output_type)
 
 # Convergence Testing
 def sample_wiener(Wiener, N_benchmark, N):
@@ -342,14 +359,13 @@ alfa_array = [1.0]
 #     p_array.append(2**i)
 #     alfa_array.append(2**i)
 
+# Combine parameters p and alpha (Cartesian product of the two lists)
+parameter_combinations = list(itertools.product(p_array, alfa_array))
+
 # Analyse p value
 seeds = [0, 1]
-alfa = alfa_array[0]
-p_value_analysis(N, delta_t, seeds, xi_0, sigma_0, S_0, coeff, alfa, p_array, variable_of_interest="sigma")
+parameter_analysis(N, delta_t, seeds, xi_0, sigma_0, S_0, coeff, parameter_combinations, output_type="S_t")
 sys.exit()
-
-# Cartesian product of the two lists
-parameter_combinations = itertools.product(alfa_array, p_array)
 
 # Compare schemes
 # for pair in parameter_combinations:
