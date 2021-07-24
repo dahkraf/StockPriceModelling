@@ -6,12 +6,30 @@ from matplotlib.font_manager import FontProperties
 from matplotlib.colors import hsv_to_rgb
 import sys
 
+# Plot settings
 plt.rcParams['figure.figsize'] = (9,6)
 plt.rcParams['lines.linewidth'] = 3
 plt.rcParams['xtick.bottom'] = False
 plt.rcParams['ytick.left'] = False
+
+# Plot styling
 # pal = ["#B11412","#B3CDE3", "#CCEBC5","#CFCCC4", "#C6A205", "#0FB379", "#E048A6", "#1A62E2", "#00C9B2", "#E18D13", "#8ADD11"]
 pal = ["#294AD9","#0D98DF", "#11E4C6","#0CE359", "#36BC14", "#ABD800", "#F3E80B", "#E89000", "#E4602B", "#D73333", "#DE4CE2"]
+def decimal_rgb_to_hex_colour(r, g, b):
+    r = "{0:0{1}x}".format(r, 2)
+    g = "{0:0{1}x}".format(g, 2)
+    b = "{0:0{1}x}".format(b, 2)
+    final_color = str.upper("#" + r + g + b)
+    return final_color
+def generate_continuous_palette(num_of_values, sat, val):
+    colour_step = int(256 / num_of_values)
+
+    hues = list(range(0, 256, colour_step))
+    hsv_list = list(map((lambda hue: (hue / 256.0, sat / 256.0, val / 256.0)), hues))
+    rgb_list = list(map((lambda xyz: tuple(map(lambda a: int(256.0 * a), hsv_to_rgb(xyz)))), hsv_list))
+
+    continuous_palette = list(map(lambda xyz: decimal_rgb_to_hex_colour(*xyz), rgb_list))
+    return continuous_palette
 
 # White Noise
 def normal_distribution(mean, var, N_samples, seed):
@@ -120,6 +138,11 @@ def plot_parameter_analysis(timestamps, outputs, parameters, output_variable="S_
     fontP = FontProperties()
     fontP.set_size('x-small')
 
+    # Generate a new palette
+    number_of_values = len(parameters)
+    sat, val = 185, 213
+    continuous_palette = generate_continuous_palette(number_of_values, sat, val)
+
     fig, ax = plt.subplots()
 
     # Graph settings
@@ -136,13 +159,13 @@ def plot_parameter_analysis(timestamps, outputs, parameters, output_variable="S_
         for i, param in enumerate(parameters):
             p = param[0]
             alfa = param[1]
-            ax.plot(timestamps, outputs[i], label="$p =$ {p} $\\alpha =$ {alfa}".format(p=p, alfa=alfa), color=pal[i], marker="o", markevery=x_step)
+            ax.plot(timestamps, outputs[i], label="$p =$ {p} $\\alpha =$ {alfa}".format(p=p, alfa=alfa), color=continuous_palette[i], linewidth=1.5)
     elif (output_variable == "sigma"):
         output_variable_latex_name = "$\\" + output_variable_latex_name + "$"
         for i, param in enumerate(parameters):
             p = param[0]
             alfa = param[1]
-            ax.plot(timestamps, outputs[i], label="$p =$ {p} $\\alpha =$ {alfa}".format(p=p, alfa=alfa), color=pal[i], marker="o", markevery=x_step)
+            ax.plot(timestamps, outputs[i], label="$p =$ {p} $\\alpha =$ {alfa}".format(p=p, alfa=alfa), color=continuous_palette[i], linewidth=1.5)
     else:
         output_variable = "S_t"
         output_variable_latex_name = output_variable
@@ -150,7 +173,7 @@ def plot_parameter_analysis(timestamps, outputs, parameters, output_variable="S_
         for i, param in enumerate(parameters):
             p = param[0]
             alfa = param[1]
-            ax.plot(timestamps, outputs[i], label="$p =$ {p} $\\alpha =$ {alfa}".format(p=p, alfa=alfa), color=pal[i], marker="o", markevery=x_step)
+            ax.plot(timestamps, outputs[i], label="$p =$ {p} $\\alpha =$ {alfa}".format(p=p, alfa=alfa), color=continuous_palette[i], linewidth=1.5)
 
     ax.set_xlabel("$t$")
     ax.set_ylabel(output_variable_latex_name)
@@ -160,8 +183,11 @@ def plot_parameter_analysis(timestamps, outputs, parameters, output_variable="S_
     plt.close()
 
 def plot_stock_expectation(p_array, Avg_stocks):
+    sat, val = 185, 213
+    continuous_palette = generate_continuous_palette(len(p_array), sat, val)
+
     fig, ax = plt.subplots()
-    ax.plot(p_array, Avg_stocks, linestyle="--", marker='o', color=pal[2], mfc=pal[9], mec=pal[9])
+    ax.plot(p_array, Avg_stocks, linestyle="--", marker='o', color=continuous_palette[2], mfc=continuous_palette[9], mec=continuous_palette[9])
     ax.set_xlabel('$p$')
     ax.set_ylabel('$E[S_t]$')
     #plt.legend(bbox_to_anchor=(1, 1), loc='upper left')
@@ -376,31 +402,31 @@ sys.exit()
 sys.exit()
 ######################################################
 # Effect of p on the E[S_t]
-Avg_stocks = []
-array = []
+# Avg_stocks = []
+# array = []
 # print(list(parameter_combinations))
-for pair in parameter_combinations:
-    Stocks = 0.0
-    print("here")
-    # Numerical solutions
-    alfa = pair[0]
-    p = pair[1]
-    array.append(p)
-    size = 20
-
-    for i in range(size):
-        print(i)
-        seeds = [i, i + 1]
-        # Wiener processes
-        timestamps = np.linspace(0.0, T_end, N)
-        Wiener1 = Quick_Wiener(N, delta_t, seeds[0])
-        Wiener2 = Quick_Wiener(N, delta_t, seeds[1])
-
-        _, _, S_array_M = Milstein_scheme(xi_0, sigma_0, S_0, coeff, alfa, p, Wiener1, Wiener2, delta_t, N)
-        Stocks += S_array_M[N - 1]
-
-    Stocks /= size
-    Avg_stocks.append(Stocks)
-
-plot_stock_expectation(array, Avg_stocks)
+# for pair in parameter_combinations:
+#     Stocks = 0.0
+#     print("here")
+#     # Numerical solutions
+#     alfa = pair[0]
+#     p = pair[1]
+#     array.append(p)
+#     size = 20
+#
+#     for i in range(size):
+#         print(i)
+#         seeds = [i, i + 1]
+#         # Wiener processes
+#         timestamps = np.linspace(0.0, T_end, N)
+#         Wiener1 = Quick_Wiener(N, delta_t, seeds[0])
+#         Wiener2 = Quick_Wiener(N, delta_t, seeds[1])
+#
+#         _, _, S_array_M = Milstein_scheme(xi_0, sigma_0, S_0, coeff, alfa, p, Wiener1, Wiener2, delta_t, N)
+#         Stocks += S_array_M[N - 1]
+#
+#     Stocks /= size
+#     Avg_stocks.append(Stocks)
+#
+# plot_stock_expectation(array, Avg_stocks)
 
