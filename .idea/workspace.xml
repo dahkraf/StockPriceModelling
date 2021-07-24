@@ -3,6 +3,7 @@
   <component name="ChangeListManager">
     <list default="true" id="3062fbd8-2c50-4f3b-8333-ea65e09fad77" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Stock Price/Plot_seed_0.png" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -103,7 +104,8 @@
       <workItem from="1626790406549" duration="4560000" />
       <workItem from="1626854516808" duration="24089000" />
       <workItem from="1626940959467" duration="12579000" />
-      <workItem from="1627034428494" duration="10760000" />
+      <workItem from="1627034428494" duration="11070000" />
+      <workItem from="1627120448970" duration="17287000" />
     </task>
     <servers />
   </component>
@@ -119,22 +121,22 @@
       <screen x="0" y="0" width="1536" height="824" />
     </state>
     <state x="449" y="149" key="#com.intellij.openapi.updateSettings.impl.PluginUpdateInfoDialog/0.0.1536.824@0.0.1536.824" timestamp="1626790281535" />
-    <state width="1493" height="155" key="GridCell.Tab.0.bottom" timestamp="1627046216079">
+    <state width="1493" height="128" key="GridCell.Tab.0.bottom" timestamp="1627139545619">
       <screen x="0" y="0" width="1536" height="824" />
     </state>
-    <state width="1493" height="155" key="GridCell.Tab.0.bottom/0.0.1536.824@0.0.1536.824" timestamp="1627046216079" />
-    <state width="1493" height="155" key="GridCell.Tab.0.center" timestamp="1627046216079">
+    <state width="1493" height="128" key="GridCell.Tab.0.bottom/0.0.1536.824@0.0.1536.824" timestamp="1627139545619" />
+    <state width="1493" height="128" key="GridCell.Tab.0.center" timestamp="1627139545619">
       <screen x="0" y="0" width="1536" height="824" />
     </state>
-    <state width="1493" height="155" key="GridCell.Tab.0.center/0.0.1536.824@0.0.1536.824" timestamp="1627046216079" />
-    <state width="1493" height="155" key="GridCell.Tab.0.left" timestamp="1627046216079">
+    <state width="1493" height="128" key="GridCell.Tab.0.center/0.0.1536.824@0.0.1536.824" timestamp="1627139545619" />
+    <state width="1493" height="128" key="GridCell.Tab.0.left" timestamp="1627139545619">
       <screen x="0" y="0" width="1536" height="824" />
     </state>
-    <state width="1493" height="155" key="GridCell.Tab.0.left/0.0.1536.824@0.0.1536.824" timestamp="1627046216079" />
-    <state width="1493" height="155" key="GridCell.Tab.0.right" timestamp="1627046216079">
+    <state width="1493" height="128" key="GridCell.Tab.0.left/0.0.1536.824@0.0.1536.824" timestamp="1627139545619" />
+    <state width="1493" height="128" key="GridCell.Tab.0.right" timestamp="1627139545619">
       <screen x="0" y="0" width="1536" height="824" />
     </state>
-    <state width="1493" height="155" key="GridCell.Tab.0.right/0.0.1536.824@0.0.1536.824" timestamp="1627046216079" />
+    <state width="1493" height="128" key="GridCell.Tab.0.right/0.0.1536.824@0.0.1536.824" timestamp="1627139545619" />
     <state width="1493" height="261" key="GridCell.Tab.1.bottom" timestamp="1626965303326">
       <screen x="0" y="0" width="1536" height="824" />
     </state>
@@ -153,6 +155,6 @@
     <state width="1493" height="261" key="GridCell.Tab.1.right/0.0.1536.824@0.0.1536.824" timestamp="1626965303326" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/StockPriceModelling$main.coverage" NAME="main Coverage Results" MODIFIED="1627046216058" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/StockPriceModelling$main.coverage" NAME="main Coverage Results" MODIFIED="1627139545602" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>

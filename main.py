@@ -2,13 +2,15 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import itertools
+from matplotlib.font_manager import FontProperties
 import sys
 
 plt.rcParams['figure.figsize'] = (9,6)
 plt.rcParams['lines.linewidth'] = 3
 plt.rcParams['xtick.bottom'] = False
 plt.rcParams['ytick.left'] = False
-pal = ["#B11412","#B3CDE3", "#CCEBC5","#CFCCC4", "#C6A205", "#0FB379", "#E048A6", "#1A62E2", "#00C9B2", "#E18D13", "#8ADD11"]
+# pal = ["#B11412","#B3CDE3", "#CCEBC5","#CFCCC4", "#C6A205", "#0FB379", "#E048A6", "#1A62E2", "#00C9B2", "#E18D13", "#8ADD11"]
+pal = ["#294AD9","#0D98DF", "#11E4C6","#0CE359", "#36BC14", "#ABD800", "#F3E80B", "#E89000", "#E4602B", "#D73333", "#DE4CE2"]
 
 # White Noise
 def normal_distribution(mean, var, N_samples, seed):
@@ -21,10 +23,20 @@ def Wiener_process(N, increments):
             continue
         Wiener[i] = Wiener[i-1] + increments[i-1]
     return Wiener
-def Quick_Wiener(N, delta_t, seed):
+def quick_Wiener(N, delta_t, seed):
     np.random.seed(seed)
     dB = np.sqrt(delta_t) * np.random.randn(N)
     return np.cumsum(dB)
+def pair_of_Wieners(N, delta_t, seeds):
+    increments1 = normal_distribution(0, delta_t, N - 1, seeds[0])
+    increments2 = normal_distribution(0, delta_t, N - 1, seeds[1])
+    Wiener1 = Wiener_process(N, increments1)
+    Wiener2 = Wiener_process(N, increments2)
+    return Wiener1, Wiener2
+def pair_of_quick_Wieners(N, delta_t, seeds):
+    Wiener1 = quick_Wiener(N, delta_t, seeds[0])
+    Wiener2 = quick_Wiener(N, delta_t, seeds[1])
+    return Wiener1, Wiener2
 
 # Numerical Schemes
 def Euler_scheme(xi_0, sigma_0, S_0, coeff, alfa, p, Wiener1, Wiener2, delta_t, N):
@@ -53,16 +65,123 @@ def Black_Scholes_exact(sigma_0, coeff, S_0, Wiener1, dt, N, T_end):
     solution = S_0 * np.exp((coeff - 0.5 * sigma_0**2) * T_end + Wiener1[N - 1] * sigma_0)
     return solution
 
+def compare_schemes(N, delta_t, seeds, xi_0, sigma_0, S_0, coeff, alfa, p):
+    # Generate Wiener processes
+    # Wiener1, Wiener2 = pair_of_Wieners(N, delta_t, seeds)
+    Wiener1, Wiener2 = pair_of_quick_Wieners(N, delta_t, seeds)
+
+    # Solve numerically
+    _, _, S_array_E = Euler_scheme(xi_0, sigma_0, S_0, coeff, alfa, p, Wiener1, Wiener2, delta_t, N)
+    _, _, S_array_M = Milstein_scheme(xi_0, sigma_0, S_0, coeff, alfa, p, Wiener1, Wiener2, delta_t, N)
+
+    # Plot the graphs
+    timestamps = np.linspace(0.0, T_end, N)
+    plot_schemes(timestamps, S_array_E, S_array_M, alfa, p)
+
 # Plotting
-def plot_schemes(Euler_array, Milstein_array, alfa, p):
+def plot_schemes(timestamps, Euler_array, Milstein_array, alfa, p):
     plt.plot(timestamps, Euler_array, label="Euler ($S_t$)", color=pal[0])
     plt.plot(timestamps, Milstein_array, label="Milstein ($S_t$)", color=pal[1])
     # plt.plot(timestamps, B_S, label="Exact ($S_t$)", color=pal[2])
     plt.title(r"Euler vs. Milstein schemes for $p =$ {p} and $\alpha =$ {alfa}".format(p=p, alfa=alfa))
+    plt.xlabel("$t$")
+    plt.ylabel("$S_t$")
+    plt.legend(loc=2)
+    plt.savefig("Plots/Schemes_p_{p}_alpha_{alpha}.jpg".format(p=p, alpha=alfa))
+def plot_errors(variable, SE, WE, SM, WM):
+    fig, ax = plt.subplots()
+    ax.plot(variable, SE, label="Euler Strong Error", color="#AC3015")
+    #ax.plot(variable, WE, label="Euler Weak Error", color="#AC3015", ls='--')
+    ax.plot(variable, SM, label="Milstein Strong Error", color="#1E97DE")
+    #ax.plot(variable, WM, label="Milstein Weak Error", color="#1E97DE", ls='--')
+    #ax.set_ylim([(10**-3), (10**1)])
+    #ax.set_xlim([min(variable), max(variable)])
+    ax.set_xlabel('$\Delta t$')
+    ax.set_ylabel('Error$_N$')
+    ax.legend()
+    plt.show()
+def plot_volatility(Stock, Volatility, alfa, p):
+    plt.plot(timestamps, Stock, label="Stock ($S_t$)", color=pal[0])
+    # plt.plot(timestamps, B_S, label="Exact ($S_t$)", color=pal[2])
+    plt.title(r"Stock for $p =$ {p} and $\alpha =$ {alfa}".format(p=p, alfa=alfa))
     plt.xlabel('t')
     plt.legend(loc = 2)
-    plt.savefig("Plots/p_{p}_alpha_{alpha}.jpg".format(p=p, alpha=alfa))
-    #plt.show()
+    plt.savefig("Stock Price/Stock_p_{p}_alpha_{alpha}.jpg".format(p=p, alpha=alfa))
+    plt.close()
+
+    plt.plot(timestamps, Volatility, label="Volatility ($S_t$)", color=pal[1])
+    plt.title(r"Volatility for $p =$ {p} and $\alpha =$ {alfa}".format(p=p, alfa=alfa))
+    plt.xlabel('t')
+    plt.legend(loc=2)
+    plt.savefig("Volatility/Vol_p_{p}_alpha_{alpha}.jpg".format(p=p, alpha=alfa))
+    plt.close()
+def plot_p_value_analysis(timestamps, outputs, p_array, output_variable="S_t"):
+    fontP = FontProperties()
+    fontP.set_size('x-small')
+
+    fig, ax = plt.subplots()
+    fig.set_figheight(10)
+    fig.set_figwidth(15)
+    output_variable_latex_name = output_variable
+    if (output_variable == "xi"):
+        output_variable_latex_name = "$\\" + output_variable_latex_name + "$"
+        for i, p in enumerate(p_array):
+            ax.plot(timestamps, outputs[i], label=r"$p =$ {p}".format(p=p), color=pal[i])
+    elif (output_variable == "sigma"):
+        output_variable_latex_name = "$\\" + output_variable_latex_name + "$"
+        for i, p in enumerate(p_array):
+            ax.plot(timestamps, outputs[i], label=r"$p =$ {p}".format(p=p), color=pal[i])
+    else:
+        output_variable="S_t"
+        output_variable_latex_name = output_variable
+        output_variable_latex_name = "$" + output_variable_latex_name + "$"
+        for i, p in enumerate(p_array):
+            ax.plot(timestamps, outputs[i], label=r"$p =$ {p}".format(p=p), color=pal[i])
+
+    ax.set_xlabel("$t$")
+    ax.set_ylabel(output_variable_latex_name)
+    plt.legend(bbox_to_anchor=(1, 1), loc='upper left', prop=fontP)
+    plt.savefig("P Value Analysis/P_Values_{output_variable}.svg".format(output_variable=output_variable))
+    fig.clf()
+    plt.close()
+
+def plot_stock_expectation(p_array, Avg_stocks):
+    fig, ax = plt.subplots()
+    ax.plot(p_array, Avg_stocks, linestyle="--", marker='o', color=pal[2], mfc=pal[9], mec=pal[9])
+    ax.set_xlabel('$p$')
+    ax.set_ylabel('$E[S_t]$')
+    #plt.legend(bbox_to_anchor=(1, 1), loc='upper left')
+    plt.savefig("Stock Price/ExpectationOfStock.svg")
+    fig.clf()
+    plt.close()
+
+# Parameter Analysis
+def p_value_analysis(N, delta_t, seeds, xi_0, sigma_0, S_0, coeff, alfa, p_array, variable_of_interest="S_t"):
+    Xis = []
+    Sigmas = []
+    Stocks = []
+
+    # Generate Wiener processes
+    # Wiener1, Wiener2 = pair_of_Wieners(N, delta_t, seeds)
+    Wiener1, Wiener2 = pair_of_quick_Wieners(N, delta_t, seeds)
+
+    # Solve for different values fo p
+    for p in p_array:
+        xi_array_M, sigma_array_M, S_array_M = Milstein_scheme(xi_0, sigma_0, S_0, coeff, alfa, p, Wiener1, Wiener2, delta_t, N)
+
+        Xis.append(xi_array_M)
+        Sigmas.append(sigma_array_M)
+        Stocks.append(S_array_M)
+
+    # Plot the graph
+    timestamps = np.linspace(0.0, T_end, N)
+    if(variable_of_interest == "xi"):
+        plot_p_value_analysis(timestamps, Xis, p_array, variable_of_interest)
+    elif (variable_of_interest == "sigma"):
+        plot_p_value_analysis(timestamps, Sigmas, p_array, variable_of_interest)
+    else:
+        variable_of_interest="S_t"
+        plot_p_value_analysis(timestamps, Stocks, p_array, variable_of_interest)
 
 # Convergence Testing
 def sample_wiener(Wiener, N_benchmark, N):
@@ -94,8 +213,8 @@ def strong_convergence(sample_sizes, sim_size):
         # print("Increments done")
         # Wiener1 = Wiener_process(N_benchmark, increments1)
         # Wiener2 = Wiener_process(N_benchmark, increments2)
-        Wiener1 = Quick_Wiener(N_benchmark, delta_t, seeds[0])
-        Wiener2 = Quick_Wiener(N_benchmark, delta_t, seeds[1])
+        Wiener1 = quick_Wiener(N_benchmark, delta_t, seeds[0])
+        Wiener2 = quick_Wiener(N_benchmark, delta_t, seeds[1])
 
         benchmark_solution_EoI = numerical_solution(Wiener1, Wiener2, N_benchmark, delta_t, scheme_name="Milstein")
         Benchmark_solutions.append(benchmark_solution_EoI)
@@ -179,55 +298,29 @@ def numerical_solution(Wiener1, Wiener2, N, delta_t, scheme_name):
         return Black_Scholes_exact(sigma_0, coeff, S_0, Wiener1, delta_t, N, T_end)
     return Euler_scheme(xi_0, sigma_0, S_0, coeff, alfa, p, Wiener1, Wiener2, delta_t, N)[2][N - 1]
 
-def plot_errors(variable, SE, WE, SM, WM):
-    fig, ax = plt.subplots()
-    ax.plot(variable, SE, label="Euler Strong Error", color="#AC3015")
-    #ax.plot(variable, WE, label="Euler Weak Error", color="#AC3015", ls='--')
-    ax.plot(variable, SM, label="Milstein Strong Error", color="#1E97DE")
-    #ax.plot(variable, WM, label="Milstein Weak Error", color="#1E97DE", ls='--')
-    #ax.set_ylim([(10**-3), (10**1)])
-    #ax.set_xlim([min(variable), max(variable)])
-    ax.set_xlabel('$\Delta t$')
-    ax.set_ylabel('Error$_N$')
-    ax.legend()
-    plt.show()
 
+# dt_grid = [10 ** (R-3) for R in range(4)]
+# #dt_grid = np.arange(min(dt_grid), max(dt_grid), 10**(-2))
+# # print(dt_grid)
+# # minval = 2 ** (-20)
+# # dt_grid.insert(0, minval)
+# # print(dt_grid)
+# sample_sizes = [(int(1.0 / dt) + 1) for dt in dt_grid]
+# dt_new = [(1.0 / ss) for ss in sample_sizes]
+# sim_size = 30
+# Strong_errors = list(zip(*list(zip(*strong_convergence(sample_sizes, sim_size)))[1]))
+# #Weak_errors = list(zip(*list(zip(*weak_convergence(sample_sizes, sim_size)))[1]))
+# Strong_Euler_errors = Strong_errors[0]
+# Strong_Milstein_errors = Strong_errors[1]
+# #Weak_Euler_errors = Weak_errors[0]
+# #Weak_Milstein_errors = Weak_errors[1]
+#
+# # Plotting
+# plot_errors(dt_new, Strong_Euler_errors, [], Strong_Milstein_errors, [])
+# sys.exit()
+#
 
-dt_grid = [10 ** (R-3) for R in range(4)]
-#dt_grid = np.arange(min(dt_grid), max(dt_grid), 10**(-2))
-# print(dt_grid)
-# minval = 2 ** (-20)
-# dt_grid.insert(0, minval)
-# print(dt_grid)
-sample_sizes = [(int(1.0 / dt) + 1) for dt in dt_grid]
-dt_new = [(1.0 / ss) for ss in sample_sizes]
-sim_size = 30
-Strong_errors = list(zip(*list(zip(*strong_convergence(sample_sizes, sim_size)))[1]))
-#Weak_errors = list(zip(*list(zip(*weak_convergence(sample_sizes, sim_size)))[1]))
-Strong_Euler_errors = Strong_errors[0]
-Strong_Milstein_errors = Strong_errors[1]
-#Weak_Euler_errors = Weak_errors[0]
-#Weak_Milstein_errors = Weak_errors[1]
-
-# Plotting
-plot_errors(dt_new, Strong_Euler_errors, [], Strong_Milstein_errors, [])
-sys.exit() ###############################################################################
-
-def plot_volatility(Stock, Volatility, alfa, p):
-    plt.plot(timestamps, Stock, label="Stock ($S_t$)", color=pal[0])
-    # plt.plot(timestamps, B_S, label="Exact ($S_t$)", color=pal[2])
-    plt.title(r"Stock for $p =$ {p} and $\alpha =$ {alfa}".format(p=p, alfa=alfa))
-    plt.xlabel('t')
-    plt.legend(loc = 2)
-    plt.savefig("Stock Price/Stock_p_{p}_alpha_{alpha}.jpg".format(p=p, alpha=alfa))
-    plt.close()
-
-    plt.plot(timestamps, Volatility, label="Volatility ($S_t$)", color=pal[1])
-    plt.title(r"Volatility for $p =$ {p} and $\alpha =$ {alfa}".format(p=p, alfa=alfa))
-    plt.xlabel('t')
-    plt.legend(loc=2)
-    plt.savefig("Volatility/Vol_p_{p}_alpha_{alpha}.jpg".format(p=p, alpha=alfa))
-    plt.close()
+###############################################################################
 
 # Space Parameters
 T_end = 1.0
@@ -241,28 +334,19 @@ xi_0 = 0.20
 coeff = 0.1
 
 # Variable Parameters
-p_array = [6.0]
-alfa_array = [-2, -0.4, -0.3, -0.2, 0.1, 0.3, 2]
+# p_array = [-1.0, -8.0, -0.6, -0.3, -0.1, 0.0, 0.1, 0.3, 0.6, 0.8, 1.0]
+p_array = [-1.2, -1.1, -1.0, -0.95, -0.85, -0.8, -0.75, -0.65, -0.6, -0.5, -0.4]
+alfa_array = [1.0]
 
 # for i in range(0, 5):
-#     #p_array.append(2**i)
+#     p_array.append(2**i)
 #     alfa_array.append(2**i)
 
-# p = 0
-# alfa = 1
-
-# Wiener processes
-timestamps = np.linspace(0.0, T_end, N)
-increments1 = normal_distribution(0, delta_t, N-1, 1)
-increments2 = normal_distribution(0, delta_t, N-1, 2)
-Wiener1 = Wiener_process(N, increments1)
-Wiener2 = Wiener_process(N, increments2)
-
-# Exact solution (Black-Scholes)
-# B_S = Black_Scholes_exact(sigma_0, coeff, S_0, Wiener1, timestamps, N)
-# _, _, M_S = Milstein_scheme(xi_0, sigma_0, S_0, coeff, 1, 0, Wiener1, Wiener2, delta_t, N)
-#
-# plot_schemes(B_S, M_S, 1, 0)
+# Analyse p value
+seeds = [0, 1]
+alfa = alfa_array[0]
+p_value_analysis(N, delta_t, seeds, xi_0, sigma_0, S_0, coeff, alfa, p_array, variable_of_interest="sigma")
+sys.exit()
 
 # Cartesian product of the two lists
 parameter_combinations = itertools.product(alfa_array, p_array)
@@ -272,54 +356,35 @@ parameter_combinations = itertools.product(alfa_array, p_array)
 #     # Numerical solutions
 #     alfa = pair[0]
 #     p = pair[1]
-#     _, _, S_array_E = Euler_scheme(xi_0, sigma_0, S_0, coeff, alfa, p, Wiener1, Wiener2, delta_t, N)
-#     _, _, S_array_M = Milstein_scheme(xi_0, sigma_0, S_0, coeff, alfa, p, Wiener1, Wiener2, delta_t, N)
-#     plot_schemes(S_array_E, S_array_M, alfa, p)
 
-def plot_Stock(timestamps, Stocks, p_array, seed_num):
-    fig, s = plt.subplots()
-    for i, p in enumerate(p_array):
-        #x.plot(timestamps, Xis[i], label=r"$a =$ {p}".format(p=p), color=pal[i])
-        #v.plot(timestamps, Vols[i], label=r"$a =$ {p}".format(p=p), color=pal[i])
-        s.plot(timestamps, Stocks[i], label=r"$a =$ {p}".format(p=p), color=pal[i])
-    # x.set_xlabel('$t$')
-    # x.set_ylabel('$\Xi_t$')
-    # v.set_xlabel('$t$')
-    # v.set_ylabel('$\sigma_t$')
-    s.set_xlabel('$t$')
-    s.set_ylabel('$S_t$')
-    plt.legend()
-    plt.savefig("Stock Price/Plot_seed_{i}.png".format(i=seed_num))
-    fig.clf()
-    plt.close()
+sys.exit()
+######################################################
+# Effect of p on the E[S_t]
+Avg_stocks = []
+array = []
+# print(list(parameter_combinations))
+for pair in parameter_combinations:
+    Stocks = 0.0
+    print("here")
+    # Numerical solutions
+    alfa = pair[0]
+    p = pair[1]
+    array.append(p)
+    size = 20
 
+    for i in range(size):
+        print(i)
+        seeds = [i, i + 1]
+        # Wiener processes
+        timestamps = np.linspace(0.0, T_end, N)
+        Wiener1 = Quick_Wiener(N, delta_t, seeds[0])
+        Wiener2 = Quick_Wiener(N, delta_t, seeds[1])
 
-for i in range(5):
-    seeds = [i, i + 1]
-    # Wiener processes
-    increments1 = normal_distribution(0, delta_t, N - 1, seeds[0])
-    increments2 = normal_distribution(0, delta_t, N - 1, seeds[1])
-    Wiener1 = Wiener_process(N, increments1)
-    Wiener2 = Wiener_process(N, increments2)
+        _, _, S_array_M = Milstein_scheme(xi_0, sigma_0, S_0, coeff, alfa, p, Wiener1, Wiener2, delta_t, N)
+        Stocks += S_array_M[N - 1]
 
-    Xis = []
-    Vols = []
-    Stocks = []
+    Stocks /= size
+    Avg_stocks.append(Stocks)
 
-    p_array = []
-    for pair in parameter_combinations:
-        # Numerical solutions
-        alfa = pair[0]
-        p = pair[1]
-        p_array.append(p)
-        size = 5
-
-        xi_array_M, sigma_array_M, S_array_M = Milstein_scheme(xi_0, sigma_0, S_0, coeff, alfa, p, Wiener1, Wiener2, delta_t, N)
-        Xis.append(xi_array_M)
-        Vols.append(sigma_array_M)
-        Stocks.append(S_array_M)
-
-    plot_Stock(timestamps, Stocks, alfa_array, i)
-    break
-
+plot_stock_expectation(array, Avg_stocks)
 
