@@ -119,7 +119,7 @@ def plot_errors(variable, SE, WE, SM, WM):
     ax.set_ylabel('Error$_N$')
     ax.legend()
     plt.show()
-def plot_volatility(Stock, Volatility, alfa, p):
+def plot_volatility(timestamps, Stock, Volatility, alfa, p):
     plt.plot(timestamps, Stock, label="Stock ($S_t$)", color=pal[0])
     # plt.plot(timestamps, B_S, label="Exact ($S_t$)", color=pal[2])
     plt.title(r"Stock for $p =$ {p} and $\alpha =$ {alfa}".format(p=p, alfa=alfa))
@@ -226,7 +226,7 @@ def parameter_analysis(N, delta_t, seeds, xi_0, sigma_0, S_0, coeff, parameters,
         output_type = "S_t"
         plot_parameter_analysis(timestamps, Stocks, parameters, output_type)
 
-# Convergence Testing
+# Convergence Analysis
 def sample_wiener(Wiener, N_benchmark, N):
     stepsize = int((N_benchmark - 1) / (N - 1))
     # 10/5 = 2
@@ -241,7 +241,7 @@ def strong_convergence(sample_sizes, sim_size):
     N_benchmark = (200 * (max(sample_sizes) - 1)) + 1
     # Space Parameters
     T_end = 1.0
-    delta_t = T_end / N_benchmark
+    delta_t_benchmark = T_end / N_benchmark
 
     errors = []
     Benchmark_solutions = []
@@ -249,17 +249,9 @@ def strong_convergence(sample_sizes, sim_size):
     for i in range(sim_size):
         seeds = [i, i+1]
         # Generate a detailed Wiener process
-        # Wiener processes
-        # timestamps = np.linspace(0.0, T_end, N_benchmark)
-        # increments1 = normal_distribution(0, delta_t, N_benchmark - 1, seeds[0])
-        # increments2 = normal_distribution(0, delta_t, N_benchmark - 1, seeds[1])
-        # print("Increments done")
-        # Wiener1 = Wiener_process(N_benchmark, increments1)
-        # Wiener2 = Wiener_process(N_benchmark, increments2)
-        Wiener1 = quick_Wiener(N_benchmark, delta_t, seeds[0])
-        Wiener2 = quick_Wiener(N_benchmark, delta_t, seeds[1])
+        Wiener1, Wiener2 = pair_of_quick_Wieners(N_benchmark, delta_t_benchmark, seeds)
 
-        benchmark_solution_EoI = numerical_solution(Wiener1, Wiener2, N_benchmark, delta_t, scheme_name="Milstein")
+        benchmark_solution_EoI = numerical_solution(Wiener1, Wiener2, N_benchmark, delta_t_benchmark, scheme_name="Milstein")
         Benchmark_solutions.append(benchmark_solution_EoI)
         Benchmark_Wieners.append((Wiener1, Wiener2))
 
@@ -342,27 +334,36 @@ def numerical_solution(Wiener1, Wiener2, N, delta_t, scheme_name):
     return Euler_scheme(xi_0, sigma_0, S_0, coeff, alfa, p, Wiener1, Wiener2, delta_t, N)[2][N - 1]
 
 
-# dt_grid = [10 ** (R-3) for R in range(4)]
-# #dt_grid = np.arange(min(dt_grid), max(dt_grid), 10**(-2))
-# # print(dt_grid)
-# # minval = 2 ** (-20)
-# # dt_grid.insert(0, minval)
-# # print(dt_grid)
-# sample_sizes = [(int(1.0 / dt) + 1) for dt in dt_grid]
-# dt_new = [(1.0 / ss) for ss in sample_sizes]
-# sim_size = 30
-# Strong_errors = list(zip(*list(zip(*strong_convergence(sample_sizes, sim_size)))[1]))
-# #Weak_errors = list(zip(*list(zip(*weak_convergence(sample_sizes, sim_size)))[1]))
-# Strong_Euler_errors = Strong_errors[0]
-# Strong_Milstein_errors = Strong_errors[1]
-# #Weak_Euler_errors = Weak_errors[0]
-# #Weak_Milstein_errors = Weak_errors[1]
-#
-# # Plotting
-# plot_errors(dt_new, Strong_Euler_errors, [], Strong_Milstein_errors, [])
-# sys.exit()
-#
+def convergence_analysis():
+    # Grid and simulation size settings
+    dt_grid = [10 ** (R-3) for R in range(4)]
+    #dt_grid = np.arange(min(dt_grid), max(dt_grid), 10**(-2))
+    # minval = 2 ** (-20)
+    # dt_grid.insert(0, minval)
+    sample_sizes = [(int(1.0 / dt) + 1) for dt in dt_grid]
+    dt_new = [(1.0 / ss) for ss in sample_sizes]
+    sim_size = 30
 
+    # Calculate errors
+    Strong_errors = list(zip(*list(zip(*strong_convergence(sample_sizes, sim_size)))[1]))
+    # Weak_errors = list(zip(*list(zip(*weak_convergence(sample_sizes, sim_size)))[1]))
+    Strong_Euler_errors = Strong_errors[0]
+    Strong_Milstein_errors = Strong_errors[1]
+    # Weak_Euler_errors = Weak_errors[0]
+    # Weak_Milstein_errors = Weak_errors[1]
+
+    # Plot the error graph
+    plot_errors(dt_new, Strong_Euler_errors, [], Strong_Milstein_errors, [])
+
+# N = 13
+# n = 7
+# delta_t = 1.0/N
+# seed = 6
+# W = quick_Wiener(N, delta_t, n)
+# print(W)
+# W_s = sample_wiener(W, N, seed)
+# print(W_s)
+# sys.exit()
 ###############################################################################
 
 # Space Parameters
