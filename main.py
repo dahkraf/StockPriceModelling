@@ -195,6 +195,33 @@ def plot_stock_expectation(p_array, Avg_stocks):
     fig.clf()
     plt.close()
 
+def plot_alfa_relation(EsoI, parameters):
+    fontP = FontProperties()
+    fontP.set_size('x-small')
+
+    continuous_palette = pal
+
+    fig, ax = plt.subplots()
+
+    # Graph settings
+    fig.set_figheight(7)
+    fig.set_figwidth(12)
+
+    alfas = []
+    ps = []
+    for i, param in enumerate(parameters):
+            # alfa = param[1]
+            # alfas.append(alfa)
+            p = param[0]
+            ps.append(p)
+
+    ax.plot(ps, EsoI, color=continuous_palette[0], linewidth=1.5)
+
+    ax.set_xlabel("$p$")
+    ax.set_ylabel("$S_T$")
+    plt.savefig("Parameter Analysis/Alpha_relation.svg", bbox_inches='tight')
+    fig.clf()
+    plt.close()
 # Parameter Analysis
 def parameter_analysis(N, delta_t, seeds, xi_0, sigma_0, S_0, coeff, parameters, output_type="S_t", var_of_interest="p"):
     Xis = []
@@ -205,6 +232,7 @@ def parameter_analysis(N, delta_t, seeds, xi_0, sigma_0, S_0, coeff, parameters,
     # Wiener1, Wiener2 = pair_of_Wieners(N, delta_t, seeds)
     Wiener1, Wiener2 = pair_of_quick_Wieners(N, delta_t, seeds)
 
+    EsoI = []
     # Solve for different pairs of parameters
     for param in parameters:
         p = param[0]
@@ -215,16 +243,20 @@ def parameter_analysis(N, delta_t, seeds, xi_0, sigma_0, S_0, coeff, parameters,
         Xis.append(xi_array_M)
         Sigmas.append(sigma_array_M)
         Stocks.append(S_array_M)
+        #EsoI.append(sigma_array_M[N - 1])
+        EsoI.append(S_array_M[N - 1])
 
-    # Plot the graph
-    timestamps = np.linspace(0.0, T_end, N)
-    if(output_type == "xi"):
-        plot_parameter_analysis(timestamps, Xis, parameters, output_type)
-    elif (output_type == "sigma"):
-        plot_parameter_analysis(timestamps, Sigmas, parameters, output_type)
-    else:
-        output_type = "S_t"
-        plot_parameter_analysis(timestamps, Stocks, parameters, output_type)
+    plot_alfa_relation(EsoI, parameters)
+
+    # # Plot the graph
+    # timestamps = np.linspace(0.0, T_end, N)
+    # if(output_type == "xi"):
+    #     plot_parameter_analysis(timestamps, Xis, parameters, output_type)
+    # elif (output_type == "sigma"):
+    #     plot_parameter_analysis(timestamps, Sigmas, parameters, output_type)
+    # else:
+    #     output_type = "S_t"
+    #     plot_parameter_analysis(timestamps, Stocks, parameters, output_type)
 
 # Convergence Analysis
 def sample_wiener(Wiener, N_benchmark, N):
@@ -358,17 +390,21 @@ def convergence_analysis():
 # N = 13
 # n = 7
 # delta_t = 1.0/N
-# seed = 6
-# W = quick_Wiener(N, delta_t, n)
+# seed = 7
+# print(np.sqrt(delta_t))
+# W = quick_Wiener(N, delta_t, seed)
+# increments = normal_distribution(0, delta_t, N, seed)
+# W_ours = Wiener_process(N, increments)
+# print(W_ours)
 # print(W)
-# W_s = sample_wiener(W, N, seed)
-# print(W_s)
+# # W_s = sample_wiener(W, N, seed)
+# # print(W_s)
 # sys.exit()
 ###############################################################################
 
 # Space Parameters
-T_end = 1.0
-N = 365
+T_end = 5.0
+N = 365*5
 delta_t = T_end/N
 
 # General Equation Parameters
@@ -379,7 +415,8 @@ coeff = 0.1
 
 # Variable Parameters
 # p_array = [-1.0, -8.0, -0.6, -0.3, -0.1, 0.0, 0.1, 0.3, 0.6, 0.8, 1.0]
-p_array = [-1.2, -1.1, -1.0, -0.95, -0.85, -0.8, -0.75, -0.65, -0.6, -0.5, -0.4]
+# p_array = [-1.2, -1.1, -1.0, -0.95, -0.85, -0.8, -0.75, -0.65, -0.6, -0.5, -0.4]
+p_array = list(np.arange(1.0, 34.0, 1.0))
 alfa_array = [1.0]
 
 # for i in range(0, 5):
@@ -390,8 +427,11 @@ alfa_array = [1.0]
 parameter_combinations = list(itertools.product(p_array, alfa_array))
 
 # Analyse p value
+# random_seed = np.random.randint(0, 200)
 seeds = [0, 1]
-parameter_analysis(N, delta_t, seeds, xi_0, sigma_0, S_0, coeff, parameter_combinations, output_type="S_t")
+output_types = ["S_t", "sigma", "xi"]
+for output_type in output_types:
+    parameter_analysis(N, delta_t, seeds, xi_0, sigma_0, S_0, coeff, parameter_combinations, output_type=output_type)
 sys.exit()
 
 # Compare schemes
