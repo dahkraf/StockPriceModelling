@@ -109,16 +109,30 @@ def plot_schemes(timestamps, Euler_array, Milstein_array, alfa, p):
     plt.savefig("Plots/Schemes_p_{p}_alpha_{alpha}.jpg".format(p=p, alpha=alfa))
 def plot_errors(variable, SE, WE, SM, WM):
     fig, ax = plt.subplots()
-    ax.plot(variable, SE, label="Euler Strong Error", color="#AC3015")
+    fig.set_figheight(7)
+    fig.set_figwidth(12)
+
+    ax.plot(variable, SE, label="Euler Strong Error", color="#AC3015", linewidth=2.0)
+    #plt.fill_between(variable, SE, facecolor="#AC3015", alpha=0.5)
+    ax.plot(variable, SM, label="Milstein Strong Error", color="#1E97DE", linewidth=2.0)
+    #plt.fill_between(variable, SM, facecolor="#1E97DE", alpha=0.5)
+
+    K = 10
+    ideal_error = [K*np.sqrt(v) for v in variable]
+    ax.plot(variable, ideal_error, label="{K}$\sqrt{{\Delta t}}$".format(K=K), color="#ABD800", linewidth=2.0)
+    plt.fill_between(variable, ideal_error, facecolor="#ABD800", alpha=0.25)
+
     #ax.plot(variable, WE, label="Euler Weak Error", color="#AC3015", ls='--')
-    ax.plot(variable, SM, label="Milstein Strong Error", color="#1E97DE")
     #ax.plot(variable, WM, label="Milstein Weak Error", color="#1E97DE", ls='--')
     #ax.set_ylim([(10**-3), (10**1)])
     #ax.set_xlim([min(variable), max(variable)])
     ax.set_xlabel('$\Delta t$')
     ax.set_ylabel('Error$_N$')
     ax.legend()
-    plt.show()
+
+    plt.savefig("Errors/Strong_errors.svg", bbox_inches='tight')
+    fig.clf()
+    plt.close()
 def plot_volatility(timestamps, Stock, Volatility, alfa, p):
     plt.plot(timestamps, Stock, label="Stock ($S_t$)", color=pal[0])
     # plt.plot(timestamps, B_S, label="Exact ($S_t$)", color=pal[2])
@@ -369,12 +383,12 @@ def numerical_solution(Wiener1, Wiener2, N, delta_t, scheme_name):
 def convergence_analysis():
     # Grid and simulation size settings
     dt_grid = [10 ** (R-3) for R in range(4)]
-    #dt_grid = np.arange(min(dt_grid), max(dt_grid), 10**(-2))
+    dt_grid = np.arange(min(dt_grid), max(dt_grid), 10**(-1))
     # minval = 2 ** (-20)
     # dt_grid.insert(0, minval)
     sample_sizes = [(int(1.0 / dt) + 1) for dt in dt_grid]
     dt_new = [(1.0 / ss) for ss in sample_sizes]
-    sim_size = 30
+    sim_size = 10
 
     # Calculate errors
     Strong_errors = list(zip(*list(zip(*strong_convergence(sample_sizes, sim_size)))[1]))
@@ -387,20 +401,9 @@ def convergence_analysis():
     # Plot the error graph
     plot_errors(dt_new, Strong_Euler_errors, [], Strong_Milstein_errors, [])
 
-# N = 13
-# n = 7
-# delta_t = 1.0/N
-# seed = 7
-# print(np.sqrt(delta_t))
-# W = quick_Wiener(N, delta_t, seed)
-# increments = normal_distribution(0, delta_t, N, seed)
-# W_ours = Wiener_process(N, increments)
-# print(W_ours)
-# print(W)
-# # W_s = sample_wiener(W, N, seed)
-# # print(W_s)
-# sys.exit()
-###############################################################################
+
+convergence_analysis()
+sys.exit()
 
 # Space Parameters
 T_end = 5.0
