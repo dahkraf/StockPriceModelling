@@ -112,25 +112,25 @@ def plot_errors(variable, SE, WE, SM, WM):
     fig.set_figheight(7)
     fig.set_figwidth(12)
 
-    ax.plot(variable, SE, label="Euler Strong Error", color="#AC3015", linewidth=2.0)
+    #ax.plot(variable, SE, label="Euler Strong Error", color="#AC3015", linewidth=2.0)
     #plt.fill_between(variable, SE, facecolor="#AC3015", alpha=0.5)
-    ax.plot(variable, SM, label="Milstein Strong Error", color="#1E97DE", linewidth=2.0)
+    #ax.plot(variable, SM, label="Milstein Strong Error", color="#1E97DE", linewidth=2.0)
     #plt.fill_between(variable, SM, facecolor="#1E97DE", alpha=0.5)
 
-    K = 10
-    ideal_error = [K*np.sqrt(v) for v in variable]
-    ax.plot(variable, ideal_error, label="{K}$\sqrt{{\Delta t}}$".format(K=K), color="#ABD800", linewidth=2.0)
-    plt.fill_between(variable, ideal_error, facecolor="#ABD800", alpha=0.25)
+    # K = 10
+    # ideal_error = [K*np.sqrt(v) for v in variable]
+    # ax.plot(variable, ideal_error, label="{K}$\sqrt{{\Delta t}}$".format(K=K), color="#ABD800", linewidth=2.0)
+    # plt.fill_between(variable, ideal_error, facecolor="#ABD800", alpha=0.25)
 
-    #ax.plot(variable, WE, label="Euler Weak Error", color="#AC3015", ls='--')
-    #ax.plot(variable, WM, label="Milstein Weak Error", color="#1E97DE", ls='--')
+    ax.plot(variable, WE, label="Euler Weak Error", color="#AC3015", ls='--', linewidth=2.0)
+    ax.plot(variable, WM, label="Milstein Weak Error", color="#1E97DE", ls='--', linewidth=2.0)
     #ax.set_ylim([(10**-3), (10**1)])
     #ax.set_xlim([min(variable), max(variable)])
     ax.set_xlabel('$\Delta t$')
     ax.set_ylabel('Error$_N$')
     ax.legend()
 
-    plt.savefig("Errors/Strong_errors.svg", bbox_inches='tight')
+    plt.savefig("Errors/Weak_errors.svg", bbox_inches='tight')
     fig.clf()
     plt.close()
 def plot_volatility(timestamps, Stock, Volatility, alfa, p):
@@ -334,34 +334,53 @@ def strong_error(Benchmark_solutions, Benchmark_Wieners, sim_size, N, N_benchmar
 
 def weak_convergence(sample_sizes, sim_size):
     # Finest grid
-    N = 10**3 * max(sample_sizes)
+    N_benchmark = (200 * (max(sample_sizes) - 1)) + 1
+    # Space Parameters
+    T_end = 1.0
+    delta_t_benchmark = T_end / N_benchmark
 
     errors = []
-    for n in sample_sizes:
-        error_dt = weak_error(sim_size, n, N)
-        errors.append((n, error_dt))
-    return errors
-def weak_error(sim_size, N, N_benchmark):
-    Euler_error = 0.0
-    Milstein_error = 0.0
-    avg_Euler = 0.0
-    avg_Milstein = 0.0
-    avg_Benchmark = 0.0
+    Mean_of_Benchmark = 0.0
+    Benchmark_Wieners = []
     for i in range(sim_size):
         seeds = [i, i + 1]
-        benchmark_solution_EoI = numerical_solution(N_benchmark, seeds, scheme_name="Milstein")[N_benchmark - 1]
-        Num_solution_Euler = numerical_solution(N, seeds, "Euler")
-        Num_solution_Milstein = numerical_solution(N, seeds, "Milstein")
-        Euler_EoI = Num_solution_Euler[N - 1]
-        Milstein_EoI = Num_solution_Milstein[N - 1]
-        avg_Euler += Euler_EoI
-        avg_Milstein += Milstein_EoI
-        avg_Benchmark += benchmark_solution_EoI
+        # Generate a detailed Wiener process
+        Wiener1, Wiener2 = pair_of_quick_Wieners(N_benchmark, delta_t_benchmark, seeds)
+
+        benchmark_solution_EoI = numerical_solution(Wiener1, Wiener2, N_benchmark, delta_t_benchmark, scheme_name="Milstein")
+        Mean_of_Benchmark += benchmark_solution_EoI
+        Benchmark_Wieners.append((Wiener1, Wiener2))
+
+    Mean_of_Benchmark /= sim_size
+
+    for N in sample_sizes:
+        error_dt = weak_error(Mean_of_Benchmark, Benchmark_Wieners, sim_size, N, N_benchmark, T_end)
+        errors.append((N, error_dt))
+    return errors
+def weak_error(Mean_of_Benchmark, Benchmark_Wieners, sim_size, N, N_benchmark, T_end):
+    avg_Euler = 0.0
+    avg_Milstein = 0.0
+    for i in range(sim_size):
+        Wiener1, Wiener2 = Benchmark_Wieners[i]
+
+        # Sample a smaller Wiener process
+        sampled_delta_t = T_end / N
+        sample_Wiener1 = sample_wiener(Wiener1, N_benchmark, N)
+        sample_Wiener2 = sample_wiener(Wiener2, N_benchmark, N)
+
+        # Calculate the solutions at the EoI
+        Num_solution_Euler_EoI = numerical_solution(sample_Wiener1, sample_Wiener2, N, sampled_delta_t, "Euler")
+        Num_solution_Milstein_EoI = numerical_solution(sample_Wiener1, sample_Wiener2, N, sampled_delta_t, "Milstein")
+
+        # Accumulate solutions
+        avg_Euler += Num_solution_Euler_EoI
+        avg_Milstein += Num_solution_Milstein_EoI
+
     avg_Euler = avg_Euler / sim_size
     avg_Milstein = avg_Milstein / sim_size
-    avg_Benchmark = avg_Benchmark / sim_size
-    Euler_error = abs(avg_Benchmark - avg_Euler)
-    Milstein_error = abs(avg_Benchmark - avg_Milstein)
+
+    Euler_error = abs(Mean_of_Benchmark - avg_Euler)
+    Milstein_error = abs(Mean_of_Benchmark - avg_Milstein)
     return Euler_error, Milstein_error
 
 def numerical_solution(Wiener1, Wiener2, N, delta_t, scheme_name):
@@ -383,23 +402,25 @@ def numerical_solution(Wiener1, Wiener2, N, delta_t, scheme_name):
 def convergence_analysis():
     # Grid and simulation size settings
     dt_grid = [10 ** (R-3) for R in range(4)]
-    dt_grid = np.arange(min(dt_grid), max(dt_grid), 10**(-1))
+    dt_grid = np.arange(min(dt_grid), max(dt_grid), 10**(-2))
     # minval = 2 ** (-20)
     # dt_grid.insert(0, minval)
     sample_sizes = [(int(1.0 / dt) + 1) for dt in dt_grid]
     dt_new = [(1.0 / ss) for ss in sample_sizes]
-    sim_size = 10
+    sim_size = 20
 
     # Calculate errors
-    Strong_errors = list(zip(*list(zip(*strong_convergence(sample_sizes, sim_size)))[1]))
-    # Weak_errors = list(zip(*list(zip(*weak_convergence(sample_sizes, sim_size)))[1]))
-    Strong_Euler_errors = Strong_errors[0]
-    Strong_Milstein_errors = Strong_errors[1]
-    # Weak_Euler_errors = Weak_errors[0]
-    # Weak_Milstein_errors = Weak_errors[1]
+    Strong_Euler_errors, Strong_Milstein_errors, Weak_Euler_errors, Weak_Milstein_errors = [], [], [], []
+
+    # Strong_errors = list(zip(*list(zip(*strong_convergence(sample_sizes, sim_size)))[1]))
+    Weak_errors = list(zip(*list(zip(*weak_convergence(sample_sizes, sim_size)))[1]))
+    # Strong_Euler_errors = Strong_errors[0]
+    # Strong_Milstein_errors = Strong_errors[1]
+    Weak_Euler_errors = Weak_errors[0]
+    Weak_Milstein_errors = Weak_errors[1]
 
     # Plot the error graph
-    plot_errors(dt_new, Strong_Euler_errors, [], Strong_Milstein_errors, [])
+    plot_errors(dt_new, Strong_Euler_errors, Weak_Euler_errors, Strong_Milstein_errors, Weak_Milstein_errors)
 
 
 convergence_analysis()
